@@ -1,6 +1,5 @@
-from typing import NewType
+def add(a: int, b: int) -> int:
+    return a + b
 
-UserId = NewType('UserId', int)
 
-some_id = UserId(12345)
-print(some_id)
+print(add(1, 2))

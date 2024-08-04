@@ -1,10 +1,7 @@
-''' task2: concat'''
+#!/usr/bin/env python3
+'''task2: floor'''
 
+def floor(n: float) -> int:
+    ''' This function returns the floor of a number '''
+    return int(n)
 
-def concat(a: str, b: str) -> str:
-    ''' This function concatenates two strings together '''
-    return a + b
-
-
-concatenated = concat('Hello', 'World')
-print(concatenated)

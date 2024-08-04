@@ -1,9 +1,11 @@
-''' Task 1: Add two numbers '''
+#!/usr/bin/env python3
+''' task2: concat'''
 
-def add (a: float, b: float) -> float:
-    ''' This function adds two numbers together '''
+
+def concat(a: str, b: str) -> str:
+    ''' This function concatenates two strings together '''
     return a + b
 
 
-sum1 = add(1, 2)
-print(sum1)
+concatenated = concat('Hello', 'World')
+print(concatenated)
