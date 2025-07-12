@@ -1,5 +1,6 @@
 import sqlite3
 import functools
+from datetime import time
 
 #### decorator to lof SQL queries
 
