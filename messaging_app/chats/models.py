@@ -10,10 +10,10 @@ class User(AbstractUser):
         ('host', 'Host')
     ]
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, db_index=True)
+    user_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, db_index=True)
     first_name = models.CharField(max_length=30, blank=False, null=False)
     last_name = models.CharField(max_length=30, blank=False, null=False)
-    email = models.EmailField(unique=True, blank=False, null=False, db_index=True)  # Added unique constraint and index
+    email = models.EmailField(unique=True, blank=False, null=False, db_index=True)
     password_hash = models.CharField(max_length=100, blank=False, null=False)
     phone_number = models.CharField(max_length=30, blank=True, null=True)
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, blank=False, null=False)
