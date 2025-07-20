@@ -172,9 +172,28 @@ class MessageViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """Filter messages to only show those the user can access"""
         user = self.request.user
-        return Message.objects.filter(
+        queryset = Message.objects.filter(
             Q(sender_id=user) | Q(recipient_id=user)
         ).select_related('sender_id', 'recipient_id', 'conversation').order_by('-sent_at')
+
+        # Handle nested routing - filter by conversation if provided
+        conversation_pk = self.kwargs.get('conversation_pk')
+        if conversation_pk:
+            queryset = queryset.filter(conversation__conversation_id=conversation_pk)
+
+        # Custom filtering based on query parameters
+        sender_id = self.request.query_params.get('sender_id')
+        recipient_id = self.request.query_params.get('recipient_id')
+        conversation_id = self.request.query_params.get('conversation')
+
+        if sender_id:
+            queryset = queryset.filter(sender_id__user_id=sender_id)
+        if recipient_id:
+            queryset = queryset.filter(recipient_id__user_id=recipient_id)
+        if conversation_id:
+            queryset = queryset.filter(conversation__conversation_id=conversation_id)
+
+        return queryset
 
     def create(self, request, *args, **kwargs):
         """
