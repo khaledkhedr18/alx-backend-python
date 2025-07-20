@@ -19,6 +19,10 @@ class User(AbstractUser):
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, blank=False, null=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def get_full_name(self):
+        """Return the user's full name."""
+        return f"{self.first_name} {self.last_name}".strip()
+
     def __str__(self):
         return self.username
 
@@ -34,6 +38,10 @@ class Conversation(models.Model):
     conversation_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, db_index=True)
     participants = models.ManyToManyField('User', related_name="conversations")
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def get_participants_names(self):
+        """Return comma-separated participant names."""
+        return ", ".join([p.get_full_name() for p in self.participants.all()])
 
     def __str__(self):
         return f"Conversation {self.conversation_id}"
