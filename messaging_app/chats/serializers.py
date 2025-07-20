@@ -3,6 +3,8 @@ from .models import User, Conversation, Message
 
 class UserSerializer(serializers.ModelSerializer):
     """Serializer for User model"""
+    full_name = serializers.CharField(source='get_full_name', read_only=True)
+
     class Meta:
         model = User
         fields = [
@@ -10,6 +12,7 @@ class UserSerializer(serializers.ModelSerializer):
             'username',
             'first_name',
             'last_name',
+            'full_name',
             'email',
             'phone_number',
             'role',
@@ -19,13 +22,16 @@ class UserSerializer(serializers.ModelSerializer):
 
 class UserSummarySerializer(serializers.ModelSerializer):
     """Lightweight User serializer for nested relationships to avoid circular references"""
+    full_name = serializers.CharField(source='get_full_name', read_only=True)
+
     class Meta:
         model = User
         fields = [
             'user_id',
             'username',
             'first_name',
-            'last_name'
+            'last_name',
+            'full_name'
         ]
         read_only_fields = ['user_id']
 
@@ -35,6 +41,8 @@ class MessageSerializer(serializers.ModelSerializer):
     recipient = UserSummarySerializer(source='recipient_id', read_only=True)
     sender_id = serializers.UUIDField(write_only=True)
     recipient_id = serializers.UUIDField(write_only=True)
+    sender_name = serializers.CharField(source='sender_id.get_full_name', read_only=True)
+    recipient_name = serializers.CharField(source='recipient_id.get_full_name', read_only=True)
 
     class Meta:
         model = Message
@@ -44,6 +52,8 @@ class MessageSerializer(serializers.ModelSerializer):
             'recipient',
             'sender_id',
             'recipient_id',
+            'sender_name',
+            'recipient_name',
             'conversation',
             'message_body',
             'sent_at',
@@ -67,6 +77,7 @@ class ConversationSerializer(serializers.ModelSerializer):
     messages = MessageSerializer(many=True, read_only=True)
     message_count = serializers.SerializerMethodField()
     last_message = serializers.SerializerMethodField()
+    participants_names = serializers.CharField(source='get_participants_names', read_only=True)
 
     class Meta:
         model = Conversation
@@ -74,6 +85,7 @@ class ConversationSerializer(serializers.ModelSerializer):
             'conversation_id',
             'participants',
             'participants_ids',
+            'participants_names',
             'messages',
             'message_count',
             'last_message',
@@ -127,12 +139,14 @@ class ConversationListSerializer(serializers.ModelSerializer):
     participants = UserSummarySerializer(many=True, read_only=True)
     message_count = serializers.SerializerMethodField()
     last_message = serializers.SerializerMethodField()
+    participants_preview = serializers.CharField(read_only=True)
 
     class Meta:
         model = Conversation
         fields = [
             'conversation_id',
             'participants',
+            'participants_preview',
             'message_count',
             'last_message',
             'created_at',
