@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from .models import User, Conversation, Message
-from .auth import IsParticipantOfConversation, IsSenderOrReadOnly # Update the import
+from .auth import IsParticipantOfConversation # Make sure to import from auth.py
 from .serializers import (
     UserSerializer,
     UserSummarySerializer,
@@ -48,7 +48,7 @@ class ConversationViewSet(viewsets.ModelViewSet):
     """
     queryset = Conversation.objects.all()
     serializer_class = ConversationSerializer
-    # Apply the custom permission. IsAuthenticated is already checked by default.
+    # This single permission is now smart enough to handle conversations.
     permission_classes = [IsParticipantOfConversation]
     lookup_field = 'conversation_id'
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -160,8 +160,8 @@ class MessageViewSet(viewsets.ModelViewSet):
     """
     queryset = Message.objects.all()
     serializer_class = MessageSerializer
-    # Apply a chain of permissions.
-    permission_classes = [IsParticipantOfConversation, IsSenderOrReadOnly]
+    # This same permission also handles messages and their specific rules.
+    permission_classes = [IsParticipantOfConversation]
     lookup_field = 'message_id'
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['sender_id', 'recipient_id', 'conversation', 'sent_at']
