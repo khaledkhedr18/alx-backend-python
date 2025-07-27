@@ -4,8 +4,11 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
+from django_filters.rest_framework import DjangoFilterBackend
 from .models import User, Conversation, Message
-from .auth import IsParticipantOfConversation # Make sure to import from auth.py
+from .permissions import IsParticipantOfConversation
+from .filters import MessageFilter, ConversationFilter
+from .pagination import MessagePagination, ConversationPagination
 from .serializers import (
     UserSerializer,
     UserSummarySerializer,
@@ -48,14 +51,14 @@ class ConversationViewSet(viewsets.ModelViewSet):
     """
     queryset = Conversation.objects.all()
     serializer_class = ConversationSerializer
-    # This single permission is now smart enough to handle conversations.
     permission_classes = [IsParticipantOfConversation]
     lookup_field = 'conversation_id'
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['created_at']
+    filterset_class = ConversationFilter
     search_fields = ['participants__username', 'participants__first_name', 'participants__last_name']
     ordering_fields = ['created_at']
     ordering = ['-created_at']
+    pagination_class = ConversationPagination
 
     def get_queryset(self):
         """Filter conversations to only show those the user participates in"""
@@ -160,14 +163,14 @@ class MessageViewSet(viewsets.ModelViewSet):
     """
     queryset = Message.objects.all()
     serializer_class = MessageSerializer
-    # This same permission also handles messages and their specific rules.
     permission_classes = [IsParticipantOfConversation]
     lookup_field = 'message_id'
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['sender_id', 'recipient_id', 'conversation', 'sent_at']
+    filterset_class = MessageFilter
     search_fields = ['message_body', 'sender_id__username', 'recipient_id__username']
     ordering_fields = ['sent_at']
     ordering = ['-sent_at']
+    pagination_class = MessagePagination
 
     def get_queryset(self):
         """Filter messages to only show those the user can access"""
@@ -180,18 +183,6 @@ class MessageViewSet(viewsets.ModelViewSet):
         conversation_pk = self.kwargs.get('conversation_pk')
         if conversation_pk:
             queryset = queryset.filter(conversation__conversation_id=conversation_pk)
-
-        # Custom filtering based on query parameters
-        sender_id = self.request.query_params.get('sender_id')
-        recipient_id = self.request.query_params.get('recipient_id')
-        conversation_id = self.request.query_params.get('conversation')
-
-        if sender_id:
-            queryset = queryset.filter(sender_id__user_id=sender_id)
-        if recipient_id:
-            queryset = queryset.filter(recipient_id__user_id=recipient_id)
-        if conversation_id:
-            queryset = queryset.filter(conversation__conversation_id=conversation_id)
 
         return queryset
 
