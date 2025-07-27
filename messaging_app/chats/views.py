@@ -4,9 +4,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
-from django_filters.rest_framework import DjangoFilterBackend
 from .models import User, Conversation, Message
-from .permissions import IsSenderOrReadOnly, IsParticipantInConversation
+from .auth import IsParticipantInConversation, IsSenderOrReadOnly # Change this import
 from .serializers import (
     UserSerializer,
     UserSummarySerializer,
