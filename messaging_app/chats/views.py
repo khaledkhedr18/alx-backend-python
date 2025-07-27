@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from .models import User, Conversation, Message
-from .auth import IsParticipantInConversation, IsSenderOrReadOnly # Change this import
+from .auth import IsParticipantOfConversation, IsSenderOrReadOnly # Update the import
 from .serializers import (
     UserSerializer,
     UserSummarySerializer,
@@ -45,11 +45,11 @@ class UserViewSet(viewsets.ModelViewSet):
 class ConversationViewSet(viewsets.ModelViewSet):
     """
     ViewSet for managing conversations
-    Provides CRUD operations for conversations
     """
     queryset = Conversation.objects.all()
     serializer_class = ConversationSerializer
-    permission_classes = [permissions.IsAuthenticated, IsParticipantInConversation]
+    # Apply the custom permission. IsAuthenticated is already checked by default.
+    permission_classes = [IsParticipantOfConversation]
     lookup_field = 'conversation_id'
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['created_at']
@@ -157,11 +157,11 @@ class ConversationViewSet(viewsets.ModelViewSet):
 class MessageViewSet(viewsets.ModelViewSet):
     """
     ViewSet for managing messages
-    Provides CRUD operations for messages
     """
     queryset = Message.objects.all()
     serializer_class = MessageSerializer
-    permission_classes = [permissions.IsAuthenticated, IsSenderOrReadOnly]
+    # Apply a chain of permissions.
+    permission_classes = [IsParticipantOfConversation, IsSenderOrReadOnly]
     lookup_field = 'message_id'
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['sender_id', 'recipient_id', 'conversation', 'sent_at']
