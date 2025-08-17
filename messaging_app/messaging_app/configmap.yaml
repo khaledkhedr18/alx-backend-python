@@ -1,0 +1,10 @@
+# ConfigMap for our non-sensitive database configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: django-mysql-configmap
+data:
+  DATABASE_NAME: "messaging_app_db"
+  DATABASE_USER: "patrick"
+  DATABASE_HOST: "mysql-service" # Name of the service we have created for MySQL
+  DATABASE_PORT: "3306"

@@ -1,0 +1,10 @@
+#!/bin/sh
+
+minikube start # Starting a kubernetes cluster
+minikube status # Checking cluster status
+kubectl cluster-info # Verifying that the cluster is running
+kubectl get nodes 
+kubectl get pods # Retrieving available pods
+# This command modifies the shell environment for the current terminal session
+# It points the local Docker client to the Docker daemon inside the Minikube VM
+eval $(minikube docker-env)

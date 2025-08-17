@@ -1,0 +1,12 @@
+# Enable ingress addon on Minikube cluster,
+# this command also deploys the NGINX Ingess Controlller in the ingres-nginx namespaces.
+minikube addons enable ingress
+
+# Verify if its running
+kubectl get pods -n ingress-nginx
+
+# Apply Ingress resource
+kubectl apply -f ingress.yaml
+
+# Test
+minikube ip

@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# Applying rolling update startegy in green
+kubectl apply -f green_deployment.yaml 
+
+# Apply blue_deployment 2.0
+kubectl apply -f blue_deployment.yaml
+
+# Monitoring the update progress 
+kubectl rollout status deployment/django-deployment
+
+# Testing if the app experiences any downtime or disruption by continuously sending requests
+curl http://localhost:8080/
+
+# Watching the pods being created/update completed
+kubectl get pods -l app=django -w

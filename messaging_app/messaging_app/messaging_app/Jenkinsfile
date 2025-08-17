@@ -1,0 +1,89 @@
+pipeline {
+    //  The pipeline can run on any available Jenkins agent.
+    // Specific stages will override this to use Docker containers for isolated environments.
+    agent any
+
+    options {
+        timestamps() // Adds timestaps to the console output making logs easier to read.
+    }
+
+    environment {
+        GITHUB_REPO_URL = 'https://github.com/MutabPato/alx-backend-python.git'
+        GITHUB_CREDENTIALS_ID = 'github-credentials'
+        TEST_REPORT_FILE = 'test-results.xml'
+    }
+
+    stages {
+        stage('Checkout Source') {
+            steps {
+                echo 'Checking out source code from Github...'
+                git branch: 'master', credentialsId: env.GITHUB_CREDENTIALS_ID, url: GITHUB_REPO_URL
+            }
+        }
+        stage('Install Dependencies') {
+            // This stage will run inside a Docker container with Python installed.
+            // This ensures a consistent environment for dependency installation.
+            agent {
+                docker {
+                    image 'python:3.9-slim-buster' // A lightweight Python 3.9 image
+                    args '-u root' // Run as root inside the container to ensure permissions for pip install
+                }
+            }
+            steps {
+                echo 'Installing Python dependencies from requirements.txt...'
+                // '--no-cache-dir' helps keep the Docker image layers when building a custom image later.
+                sh 'pip3 install --no-cache-dir -r messaging_app/requirements.txt'
+            }
+        }
+        stage('Run Tests') {
+            agent {
+                docker {
+                    image 'python:3.9-slim-buster'
+                    args '-u root'
+                }
+            }
+            steps {
+                echo 'Running tests with pytest and generating JUnit XML report...'
+                // '--junitxml' option tells pytest to generate an XML report in JUnit format,
+                // which Jenkins can parse to display test results.
+                sh "pytest --junitxml=${env.TEST_REPORT_FILE}"
+            }
+        }
+        stage('Generate Test Report') {
+            // This stage doesn't need a specific agent if it's just processing files
+            // that are already in the workspace
+            steps {
+                echo 'Publishing test results and archiving report...'
+                junit "${env.TEST_REPORT_FILE}"
+                // 'archiveArtifacts' saves the raw test report file as a build artifact,
+                // so that it can be downloaded later from the Jenkins build page.
+                archiveArtifacts artifacts: "{env.TEST_REPORT_FILE}", fingerprint: true
+            }
+        }
+        stage('Deploy') {
+            // Placejolder for the actual deployment logic.
+            steps {
+                echo 'Deploying ()...'
+            }
+        }
+    }
+    // Post-build actions: These blocks run after all stages have completed.
+    post {
+        always {
+            echo 'Cleaning up workspace...'
+            cleansWs() // Cleans the Jenkins workspace directory, useful for freeing up disk space.
+        }
+        success {
+            echo 'Pipeline succeeded! ALl stages completed, and test report generated.'
+        }
+        failure {
+            echo 'Pipeline FAILED! Please check the build logs and test results for details.'
+        }
+        unstable {
+            echo 'Pipeline was unstable! Some tests failed. Review the test report.'
+        }
+        changed {
+            echo 'Pipeline status changed since the last build.'
+        }
+    }
+}

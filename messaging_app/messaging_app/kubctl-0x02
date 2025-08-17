@@ -1,0 +1,19 @@
+#!/bin/sh
+
+# Apply blue_deployment and kubeservice exposing blue_deployment
+
+kubectl apply -f blue_deployment.yaml
+kubectl apply -f kubeservice.yaml
+
+# Apply green_deployment 
+
+kubectl apply -f green_deployment.yaml
+
+# Finding out which pod django-service is routing to
+kubectl describe svc django-service
+
+# Switching traffic to green
+kubectl patch service django-service -p '{"spec":{"selector":{"version":"green"}}}'
+
+# Checking errors in green deployment
+kubectl logs django-green-deployment-6b45786b66-d6rfr

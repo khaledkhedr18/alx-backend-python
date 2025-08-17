@@ -1,0 +1,20 @@
+version: '3.8'
+services:
+  jenkins:
+    image: jenkins/jenkins:lts
+    privileged: true            # Grants extended privileges
+    user: root                  # Runs container as root for Docker access
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    container_name: jenkins
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock     # Mounts host's Docker daemon socket
+      - /usr/local/bin/docker:/usr/local/bin/docker   # (for Linux hosts): Mounts Docker client binary
+    environment:
+      - DOCKER_HOST=unix:///var/run/docker.sock       # Tells Docker client where to find the daemon
+    restart: unless-stopped
+
+volumes:
+  jenkins_home:

@@ -1,0 +1,71 @@
+name: Messaging App CI/CD
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+  # Services needed for this job. Here, a MySQL database.
+  services:
+    mysql:
+      image: mysql:8.0
+      env:
+        MYSQL_ROOT_PASSWORD: root_password_for_ci
+        MYSQL_DATABASE: messaging_app_test_db
+        MYSQL_USER: django_ci_user 
+        MYSQL_PASSWORD: django_ci_password 
+    # Health check to ensure MySQL is ready before tests run.
+    option: >
+      --health-cmd="mysqladmin -h 127.0.0.1 -u django_ci_user -django_ci_password "
+      --health-interval=10s
+      --health-timeout=5s
+      --health-retries=10
+
+    # Env variables for the job. Will be accessible by the Django app
+    # Via os.environ.get() in settings.py
+    env:
+      DATABASE_NAME: messaging_app_test_db
+      DATABASE_USER: django_ci_user
+      DATABASE_PASSWORD: django_ci_password
+      DATABASE_HOST: mysql
+      DATABASE_PORT: 3306
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4 # Action to clone repository's code
+
+      - name: Set up Python Environment
+        uses: actions/setup-python@v5 # Action to set up Python
+        with:
+          python-version: '3.9'
+          cache: 'pip' # Cache pip dependencies for faster builds
+
+      - name: Install Dependencies
+        run: |
+          python3 -m pip install --upgrade pip 
+          pip3 install -r requirements.txt
+          pip3 install mysqlclient pytest pytest-django
+
+      - name: Run Linting (flake8)
+        run: |
+          pip3 install flake8
+          flake8 .
+        continue-on-error: true # ALlow subsequent steps to run even if linting has warnings
+
+      - name: Run Pytest Tests
+        run: pytest --junitxml=test-results.xml # Run tests and generate JUnit XML report
+
+      - name: Upload Test Results (Artifact)
+        # This step will run even if the tests fail, ensuring you always get the report.
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test-results.xml

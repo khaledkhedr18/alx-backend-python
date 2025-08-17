@@ -1,0 +1,13 @@
+# Service to allow our django app to reliably connect to the MySQL Pod
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-service # Must match the DATABASE_HOST in our ConfigMap
+spec:
+  selector:
+    app: mysql # This selects the Pods managed by our mysql-deployment
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3306
+  type: ClusterIP # Exposes the service only within the cluster

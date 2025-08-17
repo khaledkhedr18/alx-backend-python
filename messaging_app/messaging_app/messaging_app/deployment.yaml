@@ -1,0 +1,26 @@
+# Deploys our Django application
+apiVersion: apps/v1 
+kind: Deployment
+metadata: 
+  name: django-deployment
+spec:
+  replicas: 2 # Running 2 replicas for high availability
+  selector:
+    matchLabels:
+      app: django
+  template:
+    metadata:
+      labels:
+        app: django
+    spec:
+      containers:
+        - name: django-app
+          image: messaging_app:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: django-mysql-configmap
+            - secretRef:
+                name: django-mysql-secrets

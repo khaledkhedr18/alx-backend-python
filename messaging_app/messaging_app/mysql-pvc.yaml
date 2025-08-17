@@ -1,0 +1,13 @@
+# Setting persistent storage for MySQL
+# For this to work, cluster must have a storage provisioner configured
+# Can be enabled with: minikube addons enable storage-provisioner
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-persistent-volume-claim
+spec:
+  accessModes:
+  - ReadWriteOnce # This volume can be mounted as read-write by a single node
+  resources:
+    requests:
+      storage: 1Gi # Request 1 Gibibyte of storage
